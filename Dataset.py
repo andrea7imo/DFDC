@@ -140,7 +140,8 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
     args = []
 
     for key in data:
-
+        # TODO: improve logging
+        # print("File: " + key + "\tPath where images are stored: " + pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"])
         args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None))
 
     p.starmap(extractFrames, args)
