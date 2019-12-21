@@ -17,6 +17,7 @@ import cv2
 import dlib
 from tqdm import tqdm
 from PIL import Image
+from multiprocessing import Pool
 
 def pil_loader(path):
     with open(path, 'rb') as f:
@@ -135,12 +136,17 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
     with open(pathJSONInput) as f:
         data = json.load(f)
 
+    p = Pool(4)
+    args = []
+
     for key in data:
-        print("File: " + key + "\tPath where images are stored: " + pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"])
-        extractFrames(pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], start_frame=0, end_frame=None)
+
+        args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None))
+
+    p.starmap(extractFrames, args)
 
 
-#storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset")
+storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset")
 
-train = Dataset("/aiml/project/DFDC/FramesDataset/train")
-print(f"Len trian: {len(train)}")
+# train = Dataset("/aiml/project/DFDC/FramesDataset/train")
+# print(f"Len trian: {len(train)}")
