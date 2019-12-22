@@ -136,7 +136,7 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=
             cropped_face = image[y:y + size, x:x + size]
             # store image
             im = Image.fromarray(cropped_face)
-            im.save(output_path + "/" + video_filename + str(frame_num) + ".jpg")
+            im.save(output_path + "/" + video_filename + "_" + str(frame_num) + ".jpg")
 
         if frame_num >= end_frame:
             break
