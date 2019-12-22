@@ -17,12 +17,14 @@ import cv2
 import dlib
 from tqdm import tqdm
 from PIL import Image
-from multiprocessing import Pool
+from multiprocessing import Pool, current_process
+
 
 def pil_loader(path):
     with open(path, 'rb') as f:
         img = Image.open(f)
         return img.convert('RGB')
+
 
 class Dataset(VisionDataset):
     def __init__(self, pathFrames, type="train", transform=None, target_transform=None):
@@ -84,9 +86,9 @@ def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     return x1, y1, size_bb
 
 
-def extractFrames(video_path, output_path, start_frame=0, end_frame=None):
-    print('Starting: {}'.format(video_path))
+def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=None, total=None):
     # Read and write
+    current = current_process()
     reader = cv2.VideoCapture(video_path)
     video_filename = video_path.split('/')[-1].split('.')[0]
     num_frames = int(reader.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -98,7 +100,14 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None):
     frame_num = 0
     assert start_frame < num_frames - 1
     end_frame = end_frame if end_frame else num_frames
-    pbar = tqdm(total=end_frame - start_frame)
+    if count is not None:
+        if total is not None:
+            text = "{} - Processing video {}/{}: ".format(str(current.name), count, total)
+        else:
+            text = "{} - Processing video {}: ".format(str(current.name), count)
+        pbar = tqdm(total=end_frame - start_frame, desc=text)
+    else:
+        pbar = tqdm(total=end_frame - start_frame)
 
     while reader.isOpened():
         _, image = reader.read()
@@ -136,18 +145,16 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
     with open(pathJSONInput) as f:
         data = json.load(f)
 
-    p = Pool(4)
+    p = Pool(os.cpu_count())
     args = []
 
-    for key in data:
-        # TODO: improve logging
-        # print("File: " + key + "\tPath where images are stored: " + pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"])
-        args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None))
+    for count, key in enumerate(data, 1):
+        args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None, count, len(data)))
 
     p.starmap(extractFrames, args)
 
 
-storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset")
+# storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
 
-# train = Dataset("/aiml/project/DFDC/FramesDataset/train")
-# print(f"Len trian: {len(train)}")
+train = Dataset("/aiml/project/DFDC/FramesDataset/train")
+print(f"Len trian: {len(train)}")
