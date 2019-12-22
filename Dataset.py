@@ -119,6 +119,10 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=
             continue
         pbar.update(1)
 
+        # Sampling
+        if frame_num % 10 is not 0:
+            continue
+
         # Image size
         height, width = image.shape[:2]
 
