@@ -123,6 +123,11 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=
         if frame_num % 10 is not 0:
             continue
 
+        # Check if frame was already computed
+        if os.path.exists(output_path + "/" + video_filename + "_" + str(frame_num) + ".jpg"):
+            print("{} already exists!".format(output_path + "/" + video_filename + "_" + str(frame_num) + ".jpg"))
+            continue
+
         # Image size
         height, width = image.shape[:2]
 
