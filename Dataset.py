@@ -164,8 +164,9 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
 
         args.append((os.path.join(pathROOT, key), label_dir, 0, None, count, len(data)))
 
-    p.starmap(extractFrames, args)
-
+    p.starmap_async(extractFrames, args)
+    p.close()
+    p.join()
 
 def loadJSONs(pathJSONs, pathOutput):
     # apertura dei JSON con ricerca in profondità
