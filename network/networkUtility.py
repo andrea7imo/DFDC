@@ -1,3 +1,27 @@
+import copy
+import matplotlib.pyplot as plt
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.backends import cudnn
+from tqdm import tqdm
+
+from network.xception import Xception
+
+DEVICE = 'cuda'
+
+BATCH_SIZE = 256     # Higher batch sizes allows for larger learning rates. An empirical heuristic suggests that, when changing
+                     # the batch size, learning rate should change by the same factor to have comparable results
+
+LR = 1e-2            # The initial Learning Rate
+MOMENTUM = 0.9       # Hyperparameter for SGD, keep this at 0.9 when using SGD
+WEIGHT_DECAY = 5e-5  # Regularization, you can keep this at the default
+
+NUM_EPOCHS = 30      # Total number of training epochs (iterations over dataset)
+STEP_SIZE = 10       # How many epochs before decreasing learning rate (if using a step-down policy)
+GAMMA = 0.1          # Multiplicative factor for learning rate step-down
+
+LOG_FREQUENCY = 10
 # Per salvare i valori di hyperparameters durante l'ottimizzazione
 def saveHyperparameter(accuracy, LR, WEIGHT_DECAY, STEP_SIZE, PATH):
     torch.save({
@@ -29,7 +53,7 @@ def saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTra
               }, PATH)
 
 def loadModel(PATH):
-    net = createAlexNet() #TODO: da sostituire con xception!!
+    net = Xception()
     checkpoint = torch.load(PATH)
     net.load_state_dict(checkpoint['model_state_dict'])
     best_model_wts = checkpoint['model_state_dict']
@@ -65,13 +89,12 @@ def plotAccuracyAndLoss(accurancies, accuranciesTrain, loss_values):
 
 def prepareTraining(net):
     criterion = nn.CrossEntropyLoss()
-
     parameters_to_optimize = net.parameters()
 
     optimizer = optim.SGD(parameters_to_optimize, lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=STEP_SIZE, gamma=GAMMA)
-    return criterionLabel, criterion, optimizer, scheduler
+    return  criterion, optimizer, scheduler
 
 # Train
 
@@ -79,7 +102,7 @@ def train(net, tr_dataloader, val_dataloader):
     net = net.to(DEVICE)
 
     cudnn.benchmark
-
+    criterion, optimizer, scheduler = prepareTraining(net)
     current_step = 0
     bestAccuracy = 0.0
     accuracies = []
@@ -138,14 +161,14 @@ def test(net, test_dataloader):
 
     running_corrects = 0
     for images, labels in tqdm(test_dataloader):
-    images = images.to(DEVICE)
-    labels = labels.to(DEVICE)
+        images = images.to(DEVICE)
+        labels = labels.to(DEVICE)
 
-    outputs = net(images)
+        outputs = net(images)
 
-    _, preds = torch.max(outputs.data, 1)
+        _, preds = torch.max(outputs.data, 1)
 
-    running_corrects += torch.sum(preds == labels.data).data.item()
+        running_corrects += torch.sum(preds == labels.data).data.item()
 
     accuracy = running_corrects / float(len(test_dataloader.dataset))
 
