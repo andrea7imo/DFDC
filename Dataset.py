@@ -28,20 +28,21 @@ def pil_loader(path):
 
 class Dataset(VisionDataset):
     def __init__(self, pathFrames, type="train", transform=None, target_transform=None):
+        super(Dataset, self).__init__(pathFrames, transform=transform, target_transform=target_transform)
         self.samples = []
         self.labels = []
         self.type = type
 
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
-                if dir == "real":
+                if dir == "REAL":
                     self.labels.append(1)
                 else:
                     self.labels.append(0)
-                self.samples.append(pil_loader(pathFrames + "/" + dir + "/" + file))
+                self.samples.append(pathFrames + "/" + dir + "/" + file)
 
     def __getitem__(self, index):
-        image = self.samples[index]
+        image = pil_loader(self.samples[index])
         label = self.labels[index]
 
         if self.transform is not None:
@@ -51,7 +52,7 @@ class Dataset(VisionDataset):
 
     def __len__(self):
         length = len(self.samples)
-        return length
+        return 3000 # prima era : length
 
     def setTransformantion(self, transform):
         self.transform = transform

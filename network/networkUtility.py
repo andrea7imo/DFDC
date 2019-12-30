@@ -10,7 +10,7 @@ from network.xception import Xception
 
 DEVICE = 'cuda'
 
-BATCH_SIZE = 256     # Higher batch sizes allows for larger learning rates. An empirical heuristic suggests that, when changing
+BATCH_SIZE = 5       # Higher batch sizes allows for larger learning rates. An empirical heuristic suggests that, when changing
                      # the batch size, learning rate should change by the same factor to have comparable results
 
 LR = 1e-2            # The initial Learning Rate
