@@ -32,14 +32,23 @@ class Dataset(VisionDataset):
         self.samples = []
         self.labels = []
         self.type = type
+        # Aggiunta semplice per ridurre il data set
+        numFake = 0
+        numReal = 0
+        self.datasetSize = 3000
 
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
                 if dir == "REAL":
-                    self.labels.append(1)
+                    if numReal < self.datasetSize/2:
+                        self.labels.append(1)
+                        numReal += 1
+                        self.samples.append(pathFrames + "/" + dir + "/" + file)
                 else:
-                    self.labels.append(0)
-                self.samples.append(pathFrames + "/" + dir + "/" + file)
+                    if numFake < self.datasetSize/2:
+                        self.labels.append(0)
+                        numFake += 1
+                        self.samples.append(pathFrames + "/" + dir + "/" + file)
 
     def __getitem__(self, index):
         image = pil_loader(self.samples[index])
@@ -52,7 +61,7 @@ class Dataset(VisionDataset):
 
     def __len__(self):
         length = len(self.samples)
-        return 3000 # prima era : length
+        return length
 
     def setTransformantion(self, transform):
         self.transform = transform
@@ -162,4 +171,5 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
 # storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
 
 train = Dataset("/aiml/project/DFDC/FramesDataset/train")
+
 print(f"Len trian: {len(train)}")
