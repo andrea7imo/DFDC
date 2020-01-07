@@ -155,7 +155,7 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
     with open(pathJSONInput) as f:
         data = json.load(f)
 
-    p = Pool(os.cpu_count())
+    p = Pool(4)
     args = []
 
     for count, key in enumerate(data, 1):
@@ -173,6 +173,22 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
     p.close()
     p.join()
 
+
+def storeFrame_noJSON(pathROOT, pathOutput):
+    if not os.path.isdir(pathOutput):
+        os.mkdir(pathOutput)
+
+    p = Pool(4)
+    args = []
+
+    for dir_path, dir_names, file_names in os.walk(pathROOT):
+        [args.append((os.path.join(dir_path, file), pathOutput)) for file in file_names if file.endswith('.mp4')]
+
+    p.starmap_async(extractFrames, args)
+    p.close()
+    p.join()
+
+
 def loadJSONs(pathJSONs, pathOutput):
     # apertura dei JSON con ricerca in profondità
 
@@ -185,7 +201,9 @@ def loadJSONs(pathJSONs, pathOutput):
 
 # storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
 
-loadJSONs("/aiml/project/DFDC/Datasets/dfdc_train", "/aiml/project/DFDC/FramesDataset_full")
+# loadJSONs("/aiml/project/DFDC/Datasets/dfdc_train", "/aiml/project/DFDC/FramesDataset_full")
+
+storeFrame_noJSON("/aiml/project/DFDC/Datasets/test_videos", "/aiml/project/DFDC/FramesDataset_test_videos")
 
 # train = Dataset("/aiml/project/DFDC/FramesDataset/train")
 # print(f"Len trian: {len(train)}")
