@@ -71,13 +71,13 @@ def loadModelDeepForecies():
 
 # Plot dell' accuracy e della loss function
 
-def plotAccuracyAndLoss(accurancies, accuranciesTrain, loss_values):
+def plotAccuracyAndLoss(accuracies, accuraciesTrain, loss_values):
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-    plt.title('The accurancy', fontsize=20)
-    ax.plot(accurancies, 'r', label='Validation set')
-    ax.plot(accuranciesTrain, 'b', label='Training set')
+    plt.title('The accuracy', fontsize=20)
+    ax.plot(accuracies, 'r', label='Validation set')
+    ax.plot(accuraciesTrain, 'b', label='Training set')
     ax.set_xlabel(r'Epoch', fontsize=10)
-    ax.set_ylabel(r'Accurancy', fontsize=10)
+    ax.set_ylabel(r'Accuracy', fontsize=10)
     ax.legend()
     ax.tick_params(labelsize=20)
     plt.show()
