@@ -19,16 +19,6 @@ from tqdm import tqdm
 from PIL import Image
 from multiprocessing import Pool, current_process
 
-def ListaNomi(pathFrames):
-    nomi = []
-    for dir in os.listdir(pathFrames):
-        for file in os.listdir(pathFrames + "/" + dir):
-            if file not in nomi:
-                nomi.append(file)
-                print("Trovato: "+file)
-
-    print("--------------------------------------------------------------------")
-    return nomi
 
 def pil_loader(path):
     with open(path, 'rb') as f:
