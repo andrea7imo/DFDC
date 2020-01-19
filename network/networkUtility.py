@@ -23,6 +23,7 @@ GAMMA = 0.1
 LOG_FREQUENCY = 10
 
 OPTM_HYPER = True
+alpha = 1
 
 # Per salvare i valori di hyperparameters durante l'ottimizzazione
 def saveHyperparameter(accuracy, PATH):
@@ -64,20 +65,20 @@ def loadModel(PATH):
     accuraciesTrain = checkpoint['accuraciesTrain']
     return net, best_epoch, loss_values, accuracies, accuraciesTrain, best_model_wts
 
-def loadModelDeepForecies():
+def loadModelDeepForensics():
     model = torch.load('/aiml/references/faceforensics++_models_subset/full/xception/full_c23.p')
     model = model.cuda()
     return model
 
 # Plot dell' accuracy e della loss function
 
-def plotAccuracyAndLoss(accurancies, accuranciesTrain, loss_values):
+def plotAccuracyAndLoss(accuracies, accuraciesTrain, loss_values):
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-    plt.title('The accurancy', fontsize=20)
-    ax.plot(accurancies, 'r', label='Validation set')
-    ax.plot(accuranciesTrain, 'b', label='Training set')
+    plt.title('The accuracy', fontsize=20)
+    ax.plot(accuracies, 'r', label='Validation set')
+    ax.plot(accuraciesTrain, 'b', label='Training set')
     ax.set_xlabel(r'Epoch', fontsize=10)
-    ax.set_ylabel(r'Accurancy', fontsize=10)
+    ax.set_ylabel(r'Accuracy', fontsize=10)
     ax.legend()
     ax.tick_params(labelsize=20)
     plt.show()
@@ -101,6 +102,17 @@ def prepareTraining(net):
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=STEP_SIZE, gamma=GAMMA)
     return  criterion, optimizer, scheduler
+
+# confusion matrix
+def confusion(prediction, truth):
+    confusion_vector = prediction / truth
+
+    true_positives = torch.sum(confusion_vector == 1).item()
+    false_positives = torch.sum(confusion_vector >= 4294967295).item()
+    true_negatives = torch.sum(torch.isnan(confusion_vector)).item()
+    false_negatives = torch.sum(confusion_vector == 0).item()
+
+    return true_positives, false_positives, true_negatives, false_negatives
 
 # Train
 
@@ -171,6 +183,7 @@ def test(net, test_dataloader):
     net.train(False)
 
     running_corrects = 0
+    i = 0
     for images, labels in tqdm(test_dataloader):
         images = images.to(DEVICE)
         labels = labels.to(DEVICE)
@@ -179,11 +192,22 @@ def test(net, test_dataloader):
 
         _, preds = torch.max(outputs.data, 1)
 
+        if i == 0:
+            i += 1
+            prediction = preds
+            truth = labels.data
+        else:
+            prediction = torch.cat((prediction, preds), dim=0)
+            truth = torch.cat((truth, labels.data), dim=0)
         running_corrects += torch.sum(preds == labels.data).data.item()
 
     accuracy = running_corrects / float(len(test_dataloader.dataset))
-
+    true_positives, false_positives, true_negatives, false_negatives = confusion(prediction, truth)
+    precision = true_positives/(true_positives + alpha*false_positives)
+    recall = true_positives/(true_positives + false_negatives)
+    F_1 = 2*precision*recall/(precision+recall)
     print('Test Accuracy: {}'.format(accuracy))
+    print(f'Precision: {F_1}')
     return accuracy
 
 # Random search
@@ -192,7 +216,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader):
     path_init = '/aiml/project/utility/coarse/opt_hyper_coarse_'         #path dove salvere i risultati
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
-    NUM_EPOCHS = 1
+    NUM_EPOCHS = 5
     OPTM_HYPER = True
 
     for i in range(1):
@@ -205,7 +229,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader):
         print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY}")
         print(f"****************************** START TRAINING ******************************")
 
-        model = loadModelDeepForecies()
+        model = loadModelDeepForensics()
         criterion, optimizer, scheduler = prepareTraining(model)
 
         bestAccuracy = train(model, train_dataloader, validation_dataloader)
@@ -234,7 +258,7 @@ def randomSearchFine(train_dataloader, validation_dataloader):
         print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY} \tSTEP_SIZE: {STEP_SIZE}")
         print(f"****************************** START TRAINING ******************************")
 
-        model = loadModelDeepForecies()
+        model = loadModelDeepForensics()
         criterionLabel, optimizer, scheduler = prepareTraining(model)
 
         bestAccuracy = train(model, train_dataloader, validation_dataloader)

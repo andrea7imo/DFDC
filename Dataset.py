@@ -1,14 +1,9 @@
-# TODO: scrivere una classe per l'import del dataset;
-# TODO: definire gli split in TRAINING, VALIDATION e TEST SET;
+# TODO: scrivere una classe per l'import del dataset -> da completare;
+# TODO: definire gli split in TRAINING, VALIDATION;
 # TODO: creare i dataloader;
-# TODO: creare una funzione per il caricamento dei pesi per la rete (vedi codice deepfake);
 # TODO: creare una funzione per salvare lo stato della rete;
 # TODO: creare una funzione per ripristinare lo stato della rete;
-# TODO: creare funzione per la selezione degli hyperparameters -> grid o random search;
-# TODO: creare funzione per il training;
-# TODO: creare la funzione di testing;
 import random
-
 from torchvision.datasets import VisionDataset
 import os
 import os.path
@@ -16,6 +11,7 @@ import sys
 import json
 import cv2
 import dlib
+import random
 from tqdm import tqdm
 from PIL import Image
 from multiprocessing import Pool, current_process
@@ -25,6 +21,32 @@ def pil_loader(path):
     with open(path, 'rb') as f:
         img = Image.open(f)
         return img.convert('RGB')
+
+
+def train_valid_split(dataset, num_targets):
+    '''
+    The train_valid_split function splits a training set in training and validation sets and returns them.
+    It aims for half samples of each class in training set and the other half in validation set.
+    Args:
+        dataset (VisionDataset): dataset to be splitted
+        num_targets (int): number of targets present in given dataset
+
+    Returns:
+        tuple : (train_idx, valid_idx)
+    '''
+    classes = [[] for i in range(num_targets)]
+    [classes[sample[1]].append(idx) for idx, sample in enumerate(dataset)]
+
+    train_idx = []
+    valid_idx = []
+
+    for c in classes:
+        random.shuffle(c)
+        split = int(len(c)/2)   # Split point in the middle => train/valid = 50/50
+        [train_idx.append(idx) for idx in c[split:]]
+        [valid_idx.append(idx) for idx in c[:split]]
+
+    return train_idx, valid_idx
 
 
 class Dataset(VisionDataset):
@@ -170,10 +192,3 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
         args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None, count, len(data)))
 
     p.starmap(extractFrames, args)
-
-
-# storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
-
-'''train = Dataset('/aiml/project/DFDC/FramesDataset_full/train')
-
-print(f"Len trian: {len(train)}")'''

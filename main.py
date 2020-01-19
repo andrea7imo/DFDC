@@ -1,11 +1,11 @@
 import torch
 from network.networkUtility import train
-from Dataset import Dataset
+from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
 from network.networkUtility import BATCH_SIZE
-from network.networkUtility import loadModelDeepForecies
+from network.networkUtility import loadModelDeepForensics, saveModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
 from network.networkUtility import loadHypeparameter
@@ -17,8 +17,6 @@ train_transform = transforms.Compose([transforms.Resize(333),
 ])
 
 training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform)
-train_dataloader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
-# introdurre il validation set
 
 # Prova di training
 model = loadModelDeepForecies()
