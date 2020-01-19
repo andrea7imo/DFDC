@@ -1,6 +1,6 @@
 import torch
 from network.networkUtility import train
-from Dataset import Dataset
+from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
@@ -17,13 +17,22 @@ train_transform = transforms.Compose([transforms.Resize(333),
 ])
 
 training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform)
-train_dataloader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
-# introdurre il validation set
+
+train_idx, valid_idx = train_valid_split(training_set, 2)
+
+valid_dataset = Subset(training_set, valid_idx)
+train_dataset = Subset(training_set, train_idx)
+
+train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
+valid_dataloader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
+
+print('Train Dataset: {}'.format(len(train_dataset)))
+print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 # Prova di training e salvataggio
 transfer_model = loadModelDeepForensics()
 prepareTraining(transfer_model)
-train(transfer_model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
+train(transfer_model, train_dataloader, valid_dataloader)    # <-- mettere il validation set nell'ultimo argomento
 saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
