@@ -64,7 +64,7 @@ def loadModel(PATH):
     accuraciesTrain = checkpoint['accuraciesTrain']
     return net, best_epoch, loss_values, accuracies, accuraciesTrain, best_model_wts
 
-def loadModelDeepForecies():
+def loadModelDeepForensics():
     model = torch.load('/aiml/references/faceforensics++_models_subset/full/xception/full_c23.p')
     model = model.cuda()
     return model
@@ -205,7 +205,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader):
         print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY}")
         print(f"****************************** START TRAINING ******************************")
 
-        model = loadModelDeepForecies()
+        model = loadModelDeepForensics()
         criterion, optimizer, scheduler = prepareTraining(model)
 
         bestAccuracy = train(model, train_dataloader, validation_dataloader)
@@ -234,7 +234,7 @@ def randomSearchFine(train_dataloader, validation_dataloader):
         print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY} \tSTEP_SIZE: {STEP_SIZE}")
         print(f"****************************** START TRAINING ******************************")
 
-        model = loadModelDeepForecies()
+        model = loadModelDeepForensics()
         criterionLabel, optimizer, scheduler = prepareTraining(model)
 
         bestAccuracy = train(model, train_dataloader, validation_dataloader)
