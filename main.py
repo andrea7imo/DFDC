@@ -21,13 +21,13 @@ train_dataloader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True,
 # introdurre il validation set
 
 # Prova di training e salvataggio
-#transfer_model = loadModelDeepForensics()
-#prepareTraining(transfer_model)
-#train(transfer_model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
-#saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
+transfer_model = loadModelDeepForensics()
+prepareTraining(transfer_model)
+train(transfer_model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
+saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
-randomSearchCoarse(train_dataloader, train_dataloader)
+'''randomSearchCoarse(train_dataloader, train_dataloader)
 randomSearchFine(train_dataloader, train_dataloader)
 
 # Prova di visualizzazione dei risultati del hyperparameters optimization
@@ -49,3 +49,4 @@ i_max = avg_accuracy_list.index(max(avg_accuracy_list))
 LR = LR_list[i_max]
 WEIGHT_DECAY_list = WEIGHT_DECAY_list[i_max]
 STEP_SIZE = STEP_SIZE_list[i_max]
+'''
