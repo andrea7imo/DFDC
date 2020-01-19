@@ -5,7 +5,7 @@ from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
 from network.networkUtility import BATCH_SIZE
-from network.networkUtility import loadModelDeepForecies
+from network.networkUtility import loadModelDeepForensics, saveModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
 from network.networkUtility import loadHypeparameter
@@ -20,10 +20,11 @@ training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=
 train_dataloader = DataLoader(training_set, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
 # introdurre il validation set
 
-# Prova di training
-#model = loadModelDeepForecies()
-#prepareTraining(model)
-#train(model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
+# Prova di training e salvataggio
+#transfer_model = loadModelDeepForensics()
+#prepareTraining(transfer_model)
+#train(transfer_model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
+#saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
 randomSearchCoarse(train_dataloader, train_dataloader)
