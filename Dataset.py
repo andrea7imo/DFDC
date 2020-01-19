@@ -7,6 +7,7 @@
 # TODO: creare funzione per la selezione degli hyperparameters -> grid o random search;
 # TODO: creare funzione per il training;
 # TODO: creare la funzione di testing;
+import random
 
 from torchvision.datasets import VisionDataset
 import os
@@ -29,29 +30,32 @@ def pil_loader(path):
 class Dataset(VisionDataset):
     def __init__(self, pathFrames, type="train", transform=None, target_transform=None):
         super(Dataset, self).__init__(pathFrames, transform=transform, target_transform=target_transform)
-        self.samples = []
-        self.labels = []
         self.type = type
-        # Aggiunta semplice per ridurre il data set
-        numFake = 0
-        numReal = 0
-        self.datasetSize = 3000
+        self.dic = {}       # contiene: [nome del video] = indice nella dizionario frames
+        self.frames = {}    # contiene: [indice] = lista dei frame del video
+        self.labels = []    # coniene: [indice] = 0(FAKE)/1(REAL)
+        index_video = 0     # contatore per assegnare un codice al video
 
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
-                if dir == "REAL":
-                    if numReal < self.datasetSize/2:
-                        self.labels.append(1)
-                        numReal += 1
-                        self.samples.append(pathFrames + "/" + dir + "/" + file)
+                nome_video = file.split("_")[0]
+                if(nome_video in self.dic):
+                    index = self.dic[nome_video]                                    # reperisco l'indice a cui accedere
                 else:
-                    if numFake < self.datasetSize/2:
-                        self.labels.append(0)
-                        numFake += 1
-                        self.samples.append(pathFrames + "/" + dir + "/" + file)
+                    self.dic[nome_video] = index_video
+                    index = index_video
+                    index_video += 1
+                    self.frames[index] = []                                         # creazione di una nuova lista per il video
+                    if dir == "REAL":                                               # assegnazione della label
+                            self.labels.append(1)
+                    else:
+                            self.labels.append(0)
+                self.frames[index].append(pathFrames + "/" + dir + "/" + file)      # memorizzazione del path
 
     def __getitem__(self, index):
-        image = pil_loader(self.samples[index])
+        index_random = random.randint(0,len(self.frames[index])-1)
+
+        image = pil_loader(self.frames[index][index_random])
         label = self.labels[index]
 
         if self.transform is not None:
@@ -60,7 +64,7 @@ class Dataset(VisionDataset):
         return image, label
 
     def __len__(self):
-        length = len(self.samples)
+        length = len(self.labels)
         return length
 
     def setTransformantion(self, transform):
@@ -170,6 +174,6 @@ def storeFrame(pathROOT, pathJSONInput, pathOutput):
 
 # storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
 
-train = Dataset("/aiml/project/DFDC/FramesDataset/train")
+'''train = Dataset('/aiml/project/DFDC/FramesDataset_full/train')
 
-print(f"Len trian: {len(train)}")
+print(f"Len trian: {len(train)}")'''
