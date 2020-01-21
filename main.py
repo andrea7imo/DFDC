@@ -17,15 +17,15 @@ train_transform = transforms.Compose([transforms.Resize(333),
 ])
 
 training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform)
-
+type_optimizer = 'SGD' # 'Adam' / 'RMSprop' / 'Adamax'
 # Prova di training
-model = loadModelDeepForecies()
-prepareTraining(model)
-train(model, train_dataloader, train_dataloader)    # <-- mettere il validation set nell'ultimo argomento
+model = loadModelDeepForensics()
+prepareTraining(model,type_optimizer)
+train(model, train_dataloader, val_dataloader,type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
 
 '''# Prova di hyperparameters optimization
-randomSearchCoarse(train_dataloader, train_dataloader)
-randomSearchFine(train_dataloader, train_dataloader)
+randomSearchCoarse(train_dataloader, train_dataloader,type_optimizer)
+randomSearchFine(train_dataloader, train_dataloader,type_optimizer)
 
 # Prova di visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []

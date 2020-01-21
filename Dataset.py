@@ -61,7 +61,7 @@ class Dataset(VisionDataset):
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
                 nome_video = file.split("_")[0]
-                if(nome_video in self.dic):
+                if nome_video in self.dic:
                     index = self.dic[nome_video]                                    # reperisco l'indice a cui accedere
                 else:
                     self.dic[nome_video] = index_video
@@ -69,13 +69,13 @@ class Dataset(VisionDataset):
                     index_video += 1
                     self.frames[index] = []                                         # creazione di una nuova lista per il video
                     if dir == "REAL":                                               # assegnazione della label
-                            self.labels.append(1)
+                        self.labels.append(1)
                     else:
-                            self.labels.append(0)
+                        self.labels.append(0)
                 self.frames[index].append(pathFrames + "/" + dir + "/" + file)      # memorizzazione del path
 
     def __getitem__(self, index):
-        index_random = random.randint(0,len(self.frames[index])-1)
+        index_random = random.randint(0, len(self.frames[index])-1)
 
         image = pil_loader(self.frames[index][index_random])
         label = self.labels[index]
