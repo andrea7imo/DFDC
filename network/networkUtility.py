@@ -27,7 +27,7 @@ GAMMA = 0.1
 
 LOG_FREQUENCY = 10
 
-NUM_ITER = 1
+NUM_ITER = 50
 OPTM_HYPER = True
 alpha = 1
 
@@ -256,7 +256,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
         LR = 10**random.uniform(-3, -6)
         WEIGHT_DECAY = 10**random.uniform(-5, -1)
         #STEP_SIZE = round(random.uniform(5, 30)) DA ottimizzare nella fase di fine!!!
-        print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY}")
+        print(f"[{i+1}/{NUM_ITER}]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY}")
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()
@@ -285,7 +285,7 @@ def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer):
         LR = 10 ** random.uniform(-3, -6)
         WEIGHT_DECAY = 10 ** random.uniform(-5, -1)
         STEP_SIZE = round(random.uniform(5, 30))
-        print(f"[{i}/16]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY} \tSTEP_SIZE: {STEP_SIZE}")
+        print(f"[{i+1}/{NUM_ITER}]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY} \tSTEP_SIZE: {STEP_SIZE}")
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()

@@ -11,6 +11,7 @@ from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
 from network.networkUtility import loadHypeparameter
 
+#%%
 train_transform = transforms.Compose([transforms.Resize(333),
                                       transforms.CenterCrop(299),
                                       transforms.ToTensor(),
@@ -30,6 +31,7 @@ valid_dataloader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=True
 print('Train Dataset: {}'.format(len(train_dataset)))
 print('Validation Dataset: {}'.format(len(valid_dataset)))
 
+#%%
 # Scelta ottimizzatore
 type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
 
@@ -51,6 +53,7 @@ toc = time.perf_counter()
 elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
 print(f"Search time: {elapsed_time}")
 
+#%%
 # Prova di visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []
 F1_list = []
