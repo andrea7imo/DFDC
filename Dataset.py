@@ -35,7 +35,10 @@ def train_valid_split(dataset, num_targets):
         tuple : (train_idx, valid_idx)
     '''
     classes = [[] for i in range(num_targets)]
-    [classes[sample[1]].append(idx) for idx, sample in enumerate(dataset)]
+
+    for i in range(len(dataset)):
+        target = dataset.getlabel(i)
+        classes[target].append(i)
 
     train_idx = []
     valid_idx = []
@@ -91,6 +94,9 @@ class Dataset(VisionDataset):
 
     def setTransformantion(self, transform):
         self.transform = transform
+
+    def getlabel(self, index):
+        return self.labels[index]
 
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     """
