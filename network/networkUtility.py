@@ -31,9 +31,10 @@ OPTM_HYPER = True
 alpha = 1
 
 # Per salvare i valori di hyperparameters durante l'ottimizzazione
-def saveHyperparameter(accuracy, PATH):
+def saveHyperparameter(accuracy,  F_1, PATH):
     torch.save({
         'accuracy': accuracy,
+        'F_1': F_1,
         'LR': LR,
         'WEIGHT_DECAY': WEIGHT_DECAY,
         'STEP_SIZE': STEP_SIZE
@@ -44,9 +45,10 @@ def loadHypeparameter(PATH):
     checkpoint = torch.load(PATH)
     accuracy = checkpoint['accuracy']
     LR = checkpoint['LR']
+    F_1 = checkpoint['F_1']
     WEIGHT_DECAY = checkpoint['WEIGHT_DECAY']
     STEP_SIZE = checkpoint['STEP_SIZE']
-    return accuracy, LR, WEIGHT_DECAY, STEP_SIZE
+    return accuracy, F_1, LR, WEIGHT_DECAY, STEP_SIZE
 
 # Per salvare il modello una volta finito il training
 
@@ -77,13 +79,22 @@ def loadModelDeepForensics():
 
 # Plot dell' accuracy e della loss function
 
-def plotAccuracyAndLoss(accuracies, accuraciesTrain, loss_values):
+def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
     plt.title('The accuracy', fontsize=20)
     ax.plot(accuracies, 'r', label='Validation set')
     ax.plot(accuraciesTrain, 'b', label='Training set')
     ax.set_xlabel(r'Epoch', fontsize=10)
     ax.set_ylabel(r'Accuracy', fontsize=10)
+    ax.legend()
+    ax.tick_params(labelsize=20)
+    plt.show()
+
+    fig, ax = plt.subplots(1, 1, figsize=(10, 6))
+    plt.title('F_1', fontsize=20)
+    ax.plot(F_1s, 'b', label='Loss values')
+    ax.set_xlabel(r'Epoch', fontsize=10)
+    ax.set_ylabel(r'Loss', fontsize=10)
     ax.legend()
     ax.tick_params(labelsize=20)
     plt.show()
@@ -138,6 +149,8 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
     accuracies = []
     accuraciesTrain = []
     loss_values = []
+    F_1s = []
+    bestAvg = 0
 
     for epoch in range(NUM_EPOCHS):
         print('Starting epoch {}/{}, LR = {}'.format(epoch + 1, NUM_EPOCHS, scheduler.get_lr()))
@@ -165,7 +178,7 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
 
         # validation
         print("\n\tValidation:")
-        accuracy = test(net, val_dataloader)
+        accuracy, F_1 = test(net, val_dataloader)
         if OPTM_HYPER == False:
             # test on the training set
             accuracyTrain = test(net, tr_dataloader)
@@ -173,20 +186,24 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
             accuracies.append(accuracy)
             accuraciesTrain.append(accuracyTrain)
             loss_values.append(loss.item())
+            F_1s.append(F_1)
 
-        if accuracy > bestAccuracy:
+        avg = (accuracy + F_1)/2
+        if avg > bestAvg:
             bestAccuracy = accuracy
+            bestF_1 = F_1
+            bestAvg = avg
             if OPTM_HYPER == False:
                 best_model_wts = copy.deepcopy(net.state_dict())
                 best_epoch = epoch
 
     if OPTM_HYPER == False:
-        plotAccuracyAndLoss(accuracies, accuraciesTrain, loss_values)
+        plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s, loss_values)
 
         print(f"The best value of accuracy is: {bestAccuracy} \nThe best epoch is: {best_epoch}")
-        return best_epoch, best_model_wts, bestAccuracy, accuracies, accuraciesTrain, loss_values
+        return best_epoch, best_model_wts, bestAccuracy, bestF_1, accuracies, accuraciesTrain, F_1s, loss_values
     else:
-        return bestAccuracy
+        return bestAccuracy, bestF_1
 
 # Test
 
@@ -220,7 +237,7 @@ def test(net, test_dataloader):
     F_1 = 2*precision*recall/(precision+recall)
     print('Test Accuracy: {}'.format(accuracy))
     print(f'Precision: {F_1}')
-    return accuracy
+    return accuracy, F_1
 
 # Random search
 
@@ -244,11 +261,11 @@ def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
         model = loadModelDeepForensics()
         criterion, optimizer, scheduler = prepareTraining(model,type_optimizer)
 
-        bestAccuracy = train(model, train_dataloader, validation_dataloader)
+        bestAccuracy, F_1 = train(model, train_dataloader, validation_dataloader)
 
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
-        saveHyperparameter(bestAccuracy, path)
+        saveHyperparameter(bestAccuracy, F_1, path)
         print(f"****************************** END TRAINING ******************************")
 
 
@@ -273,9 +290,9 @@ def randomSearchFine(train_dataloader, validation_dataloader,type_optimizer):
         model = loadModelDeepForensics()
         criterionLabel, optimizer, scheduler = prepareTraining(model,type_optimizer)
 
-        bestAccuracy = train(model, train_dataloader, validation_dataloader,type_optimizer)
+        bestAccuracy, bestF_1 = train(model, train_dataloader, validation_dataloader, type_optimizer)
 
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
-        saveHyperparameter(bestAccuracy, path)
+        saveHyperparameter(bestAccuracy, bestF_1, path)
         print(f"****************************** END TRAINING ******************************")

@@ -35,7 +35,10 @@ def train_valid_split(dataset, num_targets):
         tuple : (train_idx, valid_idx)
     '''
     classes = [[] for i in range(num_targets)]
-    [classes[sample[1]].append(idx) for idx, sample in enumerate(dataset)]
+
+    for i in range(len(dataset)):
+        target = dataset.getlabel(i)
+        classes[target].append(i)
 
     train_idx = []
     valid_idx = []
@@ -50,13 +53,15 @@ def train_valid_split(dataset, num_targets):
 
 
 class Dataset(VisionDataset):
-    def __init__(self, pathFrames, type="train", transform=None, target_transform=None):
+    def __init__(self, pathFrames, type="train", transform=None, target_transform=None, max_real=None, max_fake=None):
         super(Dataset, self).__init__(pathFrames, transform=transform, target_transform=target_transform)
         self.type = type
         self.dic = {}       # contiene: [nome del video] = indice nella dizionario frames
         self.frames = {}    # contiene: [indice] = lista dei frame del video
         self.labels = []    # coniene: [indice] = 0(FAKE)/1(REAL)
         index_video = 0     # contatore per assegnare un codice al video
+        fake_cnt = 0        # contatore per il numero di video fake
+        real_cnt = 0        # contatore per il numero di video real
 
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
@@ -64,20 +69,44 @@ class Dataset(VisionDataset):
                 if nome_video in self.dic:
                     index = self.dic[nome_video]                                    # reperisco l'indice a cui accedere
                 else:
-                    self.dic[nome_video] = index_video
-                    index = index_video
-                    index_video += 1
-                    self.frames[index] = []                                         # creazione di una nuova lista per il video
-                    if dir == "REAL":                                               # assegnazione della label
-                        self.labels.append(1)
+                    if dir == "REAL" and max_real is not None:
+                        if real_cnt < max_real:
+                            self.dic[nome_video] = index_video
+                            index = index_video
+                            index_video += 1
+                            self.frames[index] = []
+                            self.labels.append(1)
+                            real_cnt += 1
+                        else:
+                            continue
+
+                    elif dir == "FAKE" and max_fake is not None:
+                        if fake_cnt < max_fake:
+                            self.dic[nome_video] = index_video
+                            index = index_video
+                            index_video += 1
+                            self.frames[index] = []
+                            self.labels.append(0)
+                            fake_cnt += 1
+                        else:
+                            continue
+
                     else:
-                        self.labels.append(0)
-                self.frames[index].append(pathFrames + "/" + dir + "/" + file)      # memorizzazione del path
+                        self.dic[nome_video] = index_video
+                        index = index_video
+                        index_video += 1
+                        self.frames[index] = []                                         # creazione di una nuova lista per il video
+                        if dir == "REAL":                                               # assegnazione della label
+                            self.labels.append(1)
+                            real_cnt += 1
+                        else:
+                            self.labels.append(0)
+                            fake_cnt += 1
+
+                self.frames[index].append(pathFrames + "/" + dir + "/" + file)  # memorizzazione del path
 
     def __getitem__(self, index):
-        index_random = random.randint(0, len(self.frames[index])-1)
-
-        image = pil_loader(self.frames[index][index_random])
+        image = pil_loader(random.choice(self.frames[index]))
         label = self.labels[index]
 
         if self.transform is not None:
@@ -91,6 +120,9 @@ class Dataset(VisionDataset):
 
     def setTransformantion(self, transform):
         self.transform = transform
+
+    def getlabel(self, index):
+        return self.labels[index]
 
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     """
