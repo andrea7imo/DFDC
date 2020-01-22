@@ -191,6 +191,11 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=
         if frame_num % 10 is not 0:
             continue
 
+        # Check if frame was already computed
+        if os.path.exists(output_path + "/" + video_filename + "_" + str(frame_num) + ".jpg"):
+            print("{} already exists!".format(output_path + "/" + video_filename + "_" + str(frame_num) + ".jpg"))
+            continue
+
         # Image size
         height, width = image.shape[:2]
 
@@ -214,13 +219,61 @@ def extractFrames(video_path, output_path, start_frame=0, end_frame=None, count=
 
 def storeFrame(pathROOT, pathJSONInput, pathOutput):
     # estrapolazione di frame dove ci sono i volti da ogni video
+    print("Loaded JSON: {}".format(pathJSONInput))
     with open(pathJSONInput) as f:
         data = json.load(f)
 
-    p = Pool(os.cpu_count())
+    p = Pool(4)
     args = []
 
     for count, key in enumerate(data, 1):
-        args.append((pathROOT + "/" + key, pathOutput + "/" + data[key]["set"] + "/" + data[key]["label"], 0, None, count, len(data)))
+        set_dir = os.path.join(pathOutput, data[key]["split"])
+        if not os.path.isdir(set_dir):
+            os.mkdir(set_dir)
+
+        label_dir = os.path.join(set_dir, data[key]["label"])
+        if not os.path.isdir(label_dir):
+            os.mkdir(label_dir)
+
+        args.append((os.path.join(pathROOT, key), label_dir, 0, None, count, len(data)))
+
+    p.starmap_async(extractFrames, args)
+    p.close()
+    p.join()
+
+
+def storeFrame_noJSON(pathROOT, pathOutput):
+    if not os.path.isdir(pathOutput):
+        os.mkdir(pathOutput)
+
+    p = Pool(4)
+    args = []
+
+    for dir_path, dir_names, file_names in os.walk(pathROOT):
+        [args.append((os.path.join(dir_path, file), pathOutput)) for file in file_names if file.endswith('.mp4')]
+
+    p.starmap_async(extractFrames, args)
+    p.close()
+    p.join()
+
 
     p.starmap(extractFrames, args)
+    
+def loadJSONs(pathJSONs, pathOutput):
+    # apertura dei JSON con ricerca in profondità
+
+    if not os.path.isdir(pathOutput):
+        os.mkdir(pathOutput)
+
+    for dir_path, dir_names, file_names in os.walk(pathJSONs):
+        [storeFrame(dir_path, os.path.join(dir_path, file), pathOutput) for file in file_names if file.endswith('.json')]
+
+
+# storeFrame("/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final", "/aiml/project/DFDC/Datasets/v01a/fb_dfd_release_0.1_final/dataset.json", "/aiml/project/DFDC/FramesDataset_prova")
+
+# loadJSONs("/aiml/project/DFDC/Datasets/dfdc_train", "/aiml/project/DFDC/FramesDataset_full")
+
+# storeFrame_noJSON("/aiml/project/DFDC/Datasets/test_videos", "/aiml/project/DFDC/FramesDataset_test_videos")
+
+# train = Dataset("/aiml/project/DFDC/FramesDataset/train")
+# print(f"Len trian: {len(train)}")
