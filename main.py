@@ -30,12 +30,12 @@ print('Train Dataset: {}'.format(len(train_dataset)))
 print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 # Scelta ottimizzatore
-type_optimizer = 'SGD' # 'Adam' / 'RMSprop' / 'Adamax'
+type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
 
 # Prova di training e salvataggio
 #transfer_model = loadModelDeepForensics()
 #prepareTraining(transfer_model, type_optimizer)
-#train(model, train_dataloader, val_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
+#train(model, train_dataloader, valid_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
 #saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
