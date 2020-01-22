@@ -1,10 +1,11 @@
+import time
 import torch
 from network.networkUtility import train
 from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
-from network.networkUtility import BATCH_SIZE
+from network.networkUtility import BATCH_SIZE, NUM_ITER
 from network.networkUtility import loadModelDeepForensics, saveModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
@@ -39,25 +40,35 @@ type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
 #saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
+tic = time.perf_counter()
 randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer)
-randomSearchFine(train_dataloader, valid_dataloader, type_optimizer)
+toc = time.perf_counter()
+
+#tic = time.perf_counter()
+#randomSearchFine(train_dataloader, valid_dataloader, type_optimizer)
+#toc = time.perf_counter()
+
+elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
+print(f"Search time: {elapsed_time}")
 
 # Prova di visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []
+F1_list = []
 LR_list = []
 WEIGHT_DECAY_list = []
 STEP_SIZE_list = []
 
-path_init = '/aiml/project/utility/coarse/opt_hyper_coarse_'
-for i in range(1):
-  path = path_init + str(i)
-  avg_acc, lr, weight_decay, step_size = loadHypeparameter(path)
-  avg_accuracy_list.append(avg_acc); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
-  print(avg_acc, lr, weight_decay, step_size)
 
+path_init = '/aiml/project/DFDC/Outputs/coarse/opt_hyper_coarse_'
+for i in range(NUM_ITER):
+  path = path_init + str(i)
+  avg_acc, f1, lr, weight_decay, step_size = loadHypeparameter(path)
+  avg_accuracy_list.append(avg_acc); F1_list.append(f1); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
+  print(avg_acc, f1, lr, weight_decay, step_size)
 
 # select the best hyperparameters
 i_max = avg_accuracy_list.index(max(avg_accuracy_list))
+F1 = F1_list[i_max]
 LR = LR_list[i_max]
 WEIGHT_DECAY_list = WEIGHT_DECAY_list[i_max]
 STEP_SIZE = STEP_SIZE_list[i_max]

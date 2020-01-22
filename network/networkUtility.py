@@ -15,7 +15,7 @@ from network.xception import Xception
 
 DEVICE = 'cuda'
 
-BATCH_SIZE = 5
+BATCH_SIZE = 8
 
 LR = 1e-2
 MOMENTUM = 0.9
@@ -27,6 +27,7 @@ GAMMA = 0.1
 
 LOG_FREQUENCY = 10
 
+NUM_ITER = 1
 OPTM_HYPER = True
 alpha = 1
 
@@ -242,13 +243,13 @@ def test(net, test_dataloader):
 # Random search
 
 def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
-    path_init = '/aiml/project/utility/coarse/opt_hyper_coarse_'         #path dove salvere i risultati
+    path_init = '/aiml/project/DFDC/Outputs/coarse/opt_hyper_coarse_'         #path dove salvere i risultati
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
     NUM_EPOCHS = 5
     OPTM_HYPER = True
 
-    for i in range(1):
+    for i in range(NUM_ITER):
         global LR, WEIGHT_DECAY
         global criterion, optimizer, scheduler
 
@@ -259,9 +260,9 @@ def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()
-        criterion, optimizer, scheduler = prepareTraining(model,type_optimizer)
+        criterion, optimizer, scheduler = prepareTraining(model, type_optimizer)
 
-        bestAccuracy, F_1 = train(model, train_dataloader, validation_dataloader)
+        bestAccuracy, F_1 = train(model, train_dataloader, validation_dataloader, type_optimizer)
 
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
@@ -269,14 +270,14 @@ def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
         print(f"****************************** END TRAINING ******************************")
 
 
-def randomSearchFine(train_dataloader, validation_dataloader,type_optimizer):
-    path_init = '/aiml/project/utility/fine/opt_hyper_fine_'  # path dove salvere i risultati
+def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer):
+    path_init = '/aiml/project/DFDC/Outputs/fine/opt_hyper_fine_'  # path dove salvere i risultati
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
     NUM_EPOCHS = 15 # o di più
     OPTM_HYPER = True
 
-    for i in range(1):
+    for i in range(NUM_ITER):
         global LR, WEIGHT_DECAY, STEP_SIZE
         global criterionLabel, criterionDomain, optimizer, scheduler
 
@@ -288,7 +289,7 @@ def randomSearchFine(train_dataloader, validation_dataloader,type_optimizer):
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()
-        criterionLabel, optimizer, scheduler = prepareTraining(model,type_optimizer)
+        criterionLabel, optimizer, scheduler = prepareTraining(model, type_optimizer)
 
         bestAccuracy, bestF_1 = train(model, train_dataloader, validation_dataloader, type_optimizer)
 
