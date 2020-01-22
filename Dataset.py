@@ -106,9 +106,7 @@ class Dataset(VisionDataset):
                 self.frames[index].append(pathFrames + "/" + dir + "/" + file)  # memorizzazione del path
 
     def __getitem__(self, index):
-        index_random = random.randint(0,len(self.frames[index])-1)
-
-        image = pil_loader(self.frames[index][index_random])
+        image = pil_loader(random.choice(self.frames[index]))
         label = self.labels[index]
 
         if self.transform is not None:
