@@ -29,15 +29,18 @@ valid_dataloader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=True
 print('Train Dataset: {}'.format(len(train_dataset)))
 print('Validation Dataset: {}'.format(len(valid_dataset)))
 
+# Scelta ottimizzatore
+type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
+
 # Prova di training e salvataggio
-transfer_model = loadModelDeepForensics()
-prepareTraining(transfer_model)
-train(transfer_model, train_dataloader, valid_dataloader)    # <-- mettere il validation set nell'ultimo argomento
-saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
+#transfer_model = loadModelDeepForensics()
+#prepareTraining(transfer_model, type_optimizer)
+#train(model, train_dataloader, valid_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
+#saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
 
 # Prova di hyperparameters optimization
-'''randomSearchCoarse(train_dataloader, train_dataloader)
-randomSearchFine(train_dataloader, train_dataloader)
+randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer)
+randomSearchFine(train_dataloader, valid_dataloader, type_optimizer)
 
 # Prova di visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []
@@ -58,4 +61,3 @@ i_max = avg_accuracy_list.index(max(avg_accuracy_list))
 LR = LR_list[i_max]
 WEIGHT_DECAY_list = WEIGHT_DECAY_list[i_max]
 STEP_SIZE = STEP_SIZE_list[i_max]
-'''

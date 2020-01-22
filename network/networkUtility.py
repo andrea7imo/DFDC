@@ -1,12 +1,17 @@
 import copy
+import random
+
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
+
+from torch.optim.rmsprop import RMSprop
+from torch.optim.adamax import Adamax
 from torch.backends import cudnn
 from tqdm import tqdm
+
 from network.xception import Xception
-import random
 
 DEVICE = 'cuda'
 
@@ -105,11 +110,18 @@ def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
 
 # Preparazione per il train
 
-def prepareTraining(net):
+def prepareTraining(net, type_optimizer):
     criterion = nn.CrossEntropyLoss()
     parameters_to_optimize = net.parameters()
-
-    optimizer = optim.SGD(parameters_to_optimize, lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
+    if type_optimizer == 'SGD':
+        optimizer = optim.SGD(parameters_to_optimize, lr=LR, momentum=MOMENTUM, weight_decay=WEIGHT_DECAY)
+    if type_optimizer == 'Adam':
+        optimizer = optim.Adam(parameters_to_optimize,lr=LR,weight_decay=WEIGHT_DECAY)
+    if type_optimizer == 'RMSprop':
+        optimizer = RMSprop(parameters_to_optimize,lr=LR,weight_decay=WEIGHT_DECAY)
+    if type_optimizer == 'Adamax':
+        #Implements Adamax algorithm (a variant of Adam based on infinity norm).
+        optimizer = Adamax(parameters_to_optimize,lr=LR,weight_decay=WEIGHT_DECAY)
 
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=STEP_SIZE, gamma=GAMMA)
     return  criterion, optimizer, scheduler
@@ -127,11 +139,11 @@ def confusion(prediction, truth):
 
 # Train
 
-def train(net, tr_dataloader, val_dataloader):
+def train(net, tr_dataloader, val_dataloader,type_optimizer):
     net = net.to(DEVICE)
 
     cudnn.benchmark
-    criterion, optimizer, scheduler = prepareTraining(net)
+    criterion, optimizer, scheduler = prepareTraining(net,type_optimizer)
     current_step = 0
     bestAccuracy = 0.0
     accuracies = []
@@ -229,7 +241,7 @@ def test(net, test_dataloader):
 
 # Random search
 
-def randomSearchCoarse(train_dataloader, validation_dataloader):
+def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
     path_init = '/aiml/project/utility/coarse/opt_hyper_coarse_'         #path dove salvere i risultati
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
@@ -247,7 +259,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader):
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()
-        criterion, optimizer, scheduler = prepareTraining(model)
+        criterion, optimizer, scheduler = prepareTraining(model,type_optimizer)
 
         bestAccuracy, F_1 = train(model, train_dataloader, validation_dataloader)
 
@@ -257,7 +269,7 @@ def randomSearchCoarse(train_dataloader, validation_dataloader):
         print(f"****************************** END TRAINING ******************************")
 
 
-def randomSearchFine(train_dataloader, validation_dataloader):
+def randomSearchFine(train_dataloader, validation_dataloader,type_optimizer):
     path_init = '/aiml/project/utility/fine/opt_hyper_fine_'  # path dove salvere i risultati
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
@@ -276,9 +288,9 @@ def randomSearchFine(train_dataloader, validation_dataloader):
         print(f"****************************** START TRAINING ******************************")
 
         model = loadModelDeepForensics()
-        criterionLabel, optimizer, scheduler = prepareTraining(model)
+        criterionLabel, optimizer, scheduler = prepareTraining(model,type_optimizer)
 
-        bestAccuracy, bestF_1 = train(model, train_dataloader, validation_dataloader)
+        bestAccuracy, bestF_1 = train(model, train_dataloader, validation_dataloader, type_optimizer)
 
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
