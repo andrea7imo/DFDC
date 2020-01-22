@@ -1,13 +1,9 @@
-# TODO: scrivere una classe per l'import del dataset;
-# TODO: definire gli split in TRAINING, VALIDATION e TEST SET;
+# TODO: scrivere una classe per l'import del dataset -> da completare;
+# TODO: definire gli split in TRAINING, VALIDATION;
 # TODO: creare i dataloader;
-# TODO: creare una funzione per il caricamento dei pesi per la rete (vedi codice deepfake);
 # TODO: creare una funzione per salvare lo stato della rete;
 # TODO: creare una funzione per ripristinare lo stato della rete;
-# TODO: creare funzione per la selezione degli hyperparameters -> grid o random search;
-# TODO: creare funzione per il training;
-# TODO: creare la funzione di testing;
-
+import random
 from torchvision.datasets import VisionDataset
 import os
 import os.path
@@ -15,6 +11,7 @@ import sys
 import json
 import cv2
 import dlib
+import random
 from tqdm import tqdm
 from PIL import Image
 from multiprocessing import Pool, current_process
@@ -26,22 +23,90 @@ def pil_loader(path):
         return img.convert('RGB')
 
 
+def train_valid_split(dataset, num_targets):
+    '''
+    The train_valid_split function splits a training set in training and validation sets and returns them.
+    It aims for half samples of each class in training set and the other half in validation set.
+    Args:
+        dataset (VisionDataset): dataset to be splitted
+        num_targets (int): number of targets present in given dataset
+
+    Returns:
+        tuple : (train_idx, valid_idx)
+    '''
+    classes = [[] for i in range(num_targets)]
+
+    for i in range(len(dataset)):
+        target = dataset.getlabel(i)
+        classes[target].append(i)
+
+    train_idx = []
+    valid_idx = []
+
+    for c in classes:
+        random.shuffle(c)
+        split = int(len(c)/2)   # Split point in the middle => train/valid = 50/50
+        [train_idx.append(idx) for idx in c[split:]]
+        [valid_idx.append(idx) for idx in c[:split]]
+
+    return train_idx, valid_idx
+
+
 class Dataset(VisionDataset):
-    def __init__(self, pathFrames, type="train", transform=None, target_transform=None):
-        self.samples = []
-        self.labels = []
+    def __init__(self, pathFrames, type="train", transform=None, target_transform=None, max_real=None, max_fake=None):
+        super(Dataset, self).__init__(pathFrames, transform=transform, target_transform=target_transform)
         self.type = type
+        self.dic = {}       # contiene: [nome del video] = indice nella dizionario frames
+        self.frames = {}    # contiene: [indice] = lista dei frame del video
+        self.labels = []    # coniene: [indice] = 0(FAKE)/1(REAL)
+        index_video = 0     # contatore per assegnare un codice al video
+        fake_cnt = 0        # contatore per il numero di video fake
+        real_cnt = 0        # contatore per il numero di video real
 
         for dir in os.listdir(pathFrames):
             for file in os.listdir(pathFrames + "/" + dir):
-                if dir == "real":
-                    self.labels.append(1)
+                nome_video = file.split("_")[0]
+                if nome_video in self.dic:
+                    index = self.dic[nome_video]                                    # reperisco l'indice a cui accedere
                 else:
-                    self.labels.append(0)
-                self.samples.append(pil_loader(pathFrames + "/" + dir + "/" + file))
+                    if dir == "REAL" and max_real is not None:
+                        if real_cnt < max_real:
+                            self.dic[nome_video] = index_video
+                            index = index_video
+                            index_video += 1
+                            self.frames[index] = []
+                            self.labels.append(1)
+                            real_cnt += 1
+                        else:
+                            continue
+
+                    elif dir == "FAKE" and max_fake is not None:
+                        if fake_cnt < max_fake:
+                            self.dic[nome_video] = index_video
+                            index = index_video
+                            index_video += 1
+                            self.frames[index] = []
+                            self.labels.append(0)
+                            fake_cnt += 1
+                        else:
+                            continue
+
+                    else:
+                        self.dic[nome_video] = index_video
+                        index = index_video
+                        index_video += 1
+                        self.frames[index] = []                                         # creazione di una nuova lista per il video
+                        if dir == "REAL":                                               # assegnazione della label
+                            self.labels.append(1)
+                            real_cnt += 1
+                        else:
+                            self.labels.append(0)
+                            fake_cnt += 1
+
+                self.frames[index].append(pathFrames + "/" + dir + "/" + file)  # memorizzazione del path
 
     def __getitem__(self, index):
-        image = self.samples[index]
+        image = pil_loader(random.choice(self.frames[index]))
         label = self.labels[index]
 
         if self.transform is not None:
@@ -50,11 +115,14 @@ class Dataset(VisionDataset):
         return image, label
 
     def __len__(self):
-        length = len(self.samples)
+        length = len(self.labels)
         return length
 
     def setTransformantion(self, transform):
         self.transform = transform
+
+    def getlabel(self, index):
+        return self.labels[index]
 
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     """
@@ -189,6 +257,8 @@ def storeFrame_noJSON(pathROOT, pathOutput):
     p.join()
 
 
+    p.starmap(extractFrames, args)
+    
 def loadJSONs(pathJSONs, pathOutput):
     # apertura dei JSON con ricerca in profondità
 
@@ -203,7 +273,7 @@ def loadJSONs(pathJSONs, pathOutput):
 
 # loadJSONs("/aiml/project/DFDC/Datasets/dfdc_train", "/aiml/project/DFDC/FramesDataset_full")
 
-storeFrame_noJSON("/aiml/project/DFDC/Datasets/test_videos", "/aiml/project/DFDC/FramesDataset_test_videos")
+# storeFrame_noJSON("/aiml/project/DFDC/Datasets/test_videos", "/aiml/project/DFDC/FramesDataset_test_videos")
 
 # train = Dataset("/aiml/project/DFDC/FramesDataset/train")
 # print(f"Len trian: {len(train)}")
