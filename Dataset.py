@@ -64,7 +64,8 @@ class Dataset(VisionDataset):
         real_cnt = 0        # contatore per il numero di video real
 
         for dir in os.listdir(pathFrames):
-            for file in os.listdir(pathFrames + "/" + dir):
+            print(f"Direcotory: {dir}")
+            for file in tqdm(os.listdir(pathFrames + "/" + dir)):
                 nome_video = file.split("_")[0]
                 if nome_video in self.dic:
                     index = self.dic[nome_video]                                    # reperisco l'indice a cui accedere

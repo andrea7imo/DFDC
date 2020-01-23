@@ -242,8 +242,7 @@ def test(net, test_dataloader):
 
 # Random search
 
-def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
-    path_init = '/aiml/project/DFDC/Outputs/coarse/opt_hyper_coarse_'         #path dove salvere i risultati
+def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer, path_init):
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
     NUM_EPOCHS = 5
@@ -267,11 +266,10 @@ def randomSearchCoarse(train_dataloader, validation_dataloader,type_optimizer):
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
         saveHyperparameter(bestAccuracy, F_1, path)
-        print(f"****************************** END TRAINING ******************************")
+        print(f"******************************  END TRAINING  ******************************")
 
 
-def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer):
-    path_init = '/aiml/project/DFDC/Outputs/fine/opt_hyper_fine_'  # path dove salvere i risultati
+def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer, path_init):
     bestAccuracy = 0
     global NUM_EPOCHS, OPTM_HYPER
     NUM_EPOCHS = 15 # o di più
@@ -296,4 +294,4 @@ def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer):
         path = path_init + str(i)
         print(f"\t\tAccuracy: {bestAccuracy}")
         saveHyperparameter(bestAccuracy, bestF_1, path)
-        print(f"****************************** END TRAINING ******************************")
+        print(f"******************************  END TRAINING  ******************************")

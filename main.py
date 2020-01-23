@@ -35,6 +35,7 @@ print('Validation Dataset: {}'.format(len(valid_dataset)))
 # Scelta ottimizzatore
 type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
 
+#%%
 # Prova di training e salvataggio
 #transfer_model = loadModelDeepForensics()
 #prepareTraining(transfer_model, type_optimizer)
@@ -43,11 +44,11 @@ type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
 
 # Prova di hyperparameters optimization
 tic = time.perf_counter()
-randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer)
+randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer, path_init)
 toc = time.perf_counter()
 
 #tic = time.perf_counter()
-#randomSearchFine(train_dataloader, valid_dataloader, type_optimizer)
+#randomSearchFine(train_dataloader, valid_dataloader, type_optimizer, path_init)
 #toc = time.perf_counter()
 
 elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
@@ -61,17 +62,19 @@ LR_list = []
 WEIGHT_DECAY_list = []
 STEP_SIZE_list = []
 
-
-path_init = '/aiml/project/DFDC/Outputs/coarse/opt_hyper_coarse_'
+print("avg_acc f1     lr     wd     step_size")
 for i in range(NUM_ITER):
   path = path_init + str(i)
   avg_acc, f1, lr, weight_decay, step_size = loadHypeparameter(path)
   avg_accuracy_list.append(avg_acc); F1_list.append(f1); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
-  print(avg_acc, f1, lr, weight_decay, step_size)
+  print(f"{avg_acc:5.4f}  {f1:5.4f} {lr:5.4f} {weight_decay:5.4f} {step_size}")
 
 # select the best hyperparameters
 i_max = avg_accuracy_list.index(max(avg_accuracy_list))
 F1 = F1_list[i_max]
 LR = LR_list[i_max]
-WEIGHT_DECAY_list = WEIGHT_DECAY_list[i_max]
+WEIGHT_DECAY = WEIGHT_DECAY_list[i_max]
 STEP_SIZE = STEP_SIZE_list[i_max]
+print("\nBest result:")
+print("avg_acc f1     lr     wd     step_size")
+print(f"{avg_accuracy_list[i_max]:5.4f}  {F1:5.4f} {LR:5.4f} {WEIGHT_DECAY:5.4f} {STEP_SIZE}")
