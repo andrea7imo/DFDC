@@ -33,7 +33,8 @@ print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 #%%
 # Scelta ottimizzatore
-type_optimizer = 'Adam' #/ 'SGD' / 'RMSprop' / 'Adamax'
+type_optimizer = 'SGD'  # [RMSprop/SGD/Adam/Adamax]
+path_init = '/aiml/project/DFDC/Outputs/coarse/SGD/opt_hyper_coarse_'
 
 #%%
 # Prova di training e salvataggio
