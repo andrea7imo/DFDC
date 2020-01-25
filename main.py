@@ -9,7 +9,7 @@ from network.networkUtility import BATCH_SIZE, NUM_ITER
 from network.networkUtility import loadModelDeepForensics, saveModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
-from network.networkUtility import loadHypeparameter
+from network.networkUtility import loadHypeparameter, setHyperparameter
 
 #%%
 train_transform = transforms.Compose([transforms.Resize(333),
@@ -33,36 +33,39 @@ print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 #%%
 # Scelta ottimizzatore
-type_optimizer = 'SGD'  # [RMSprop/SGD/Adam/Adamax]
-path_init = '/aiml/project/DFDC/Outputs/coarse/SGD/opt_hyper_coarse_'
+type_optimizer = 'Adam'  # [RMSprop/SGD/Adam/Adamax]
+path_init = '/aiml/project/DFDC/Outputs/fine/Adam/opt_hyper_fine_'
 
 #%%
-# Prova di training e salvataggio
-#transfer_model = loadModelDeepForensics()
-#prepareTraining(transfer_model, type_optimizer)
-#train(model, train_dataloader, valid_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
-#saveModel(None, transfer_model.model.state_dict(), None, None, None, '/home/leonardo/Scrivania/testing.pth')
+# Training e salvataggio
+transfer_model = loadModelDeepForensics()
+prepareTraining(transfer_model, type_optimizer)
+train(transfer_model, train_dataloader, valid_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
+saveModel(None, transfer_model.model.state_dict(), None, None, None, '/aiml/project/DFDC/Outputs/models/model_5000-5000-5-coarse_adam_best.pth')
+# model name format: model_<max_real>-<max_fake>-<NUM_EPOCHS>-<hyp_id>.pth
 
-# Prova di hyperparameters optimization
+#%%
+# Hyperparameters coarse optimization
 tic = time.perf_counter()
 randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer, path_init)
 toc = time.perf_counter()
 
-#tic = time.perf_counter()
-#randomSearchFine(train_dataloader, valid_dataloader, type_optimizer, path_init)
-#toc = time.perf_counter()
-
-elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
-print(f"Search time: {elapsed_time}")
+#%%
+# Hyperparameters fine optimization
+tic = time.perf_counter()
+randomSearchFine(train_dataloader, valid_dataloader, type_optimizer, path_init)
+toc = time.perf_counter()
 
 #%%
-# Prova di visualizzazione dei risultati del hyperparameters optimization
+# Visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []
 F1_list = []
 LR_list = []
 WEIGHT_DECAY_list = []
 STEP_SIZE_list = []
+elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
 
+print(f"Search time: {elapsed_time}")
 print("avg_acc f1     lr     wd     step_size")
 for i in range(NUM_ITER):
   path = path_init + str(i)
@@ -70,6 +73,7 @@ for i in range(NUM_ITER):
   avg_accuracy_list.append(avg_acc); F1_list.append(f1); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
   print(f"{avg_acc:5.4f}  {f1:5.4f} {lr:5.4f} {weight_decay:5.4f} {step_size}")
 
+#%%
 # select the best hyperparameters
 i_max = avg_accuracy_list.index(max(avg_accuracy_list))
 F1 = F1_list[i_max]
@@ -79,3 +83,4 @@ STEP_SIZE = STEP_SIZE_list[i_max]
 print("\nBest result:")
 print("avg_acc f1     lr     wd     step_size")
 print(f"{avg_accuracy_list[i_max]:5.4f}  {F1:5.4f} {LR:5.4f} {WEIGHT_DECAY:5.4f} {STEP_SIZE}")
+setHyperparameter(LR, WEIGHT_DECAY, STEP_SIZE)

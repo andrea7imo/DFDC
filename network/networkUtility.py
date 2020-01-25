@@ -21,15 +21,24 @@ LR = 1e-2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 5e-5
 
-NUM_EPOCHS = 30
+NUM_EPOCHS = 5
 STEP_SIZE = 10
 GAMMA = 0.1
 
-LOG_FREQUENCY = 10
+LOG_FREQUENCY = 100
 
 NUM_ITER = 50
 OPTM_HYPER = True
 alpha = 1
+
+
+# Per settare i valori degli hyperparameters dal main
+def setHyperparameter(lr, weight_decay, step_size):
+    global LR, WEIGHT_DECAY, STEP_SIZE
+    LR = lr
+    WEIGHT_DECAY = weight_decay
+    STEP_SIZE = step_size
+
 
 # Per salvare i valori di hyperparameters durante l'ottimizzazione
 def saveHyperparameter(accuracy,  F_1, PATH):
@@ -280,9 +289,9 @@ def randomSearchFine(train_dataloader, validation_dataloader, type_optimizer, pa
         global criterionLabel, criterionDomain, optimizer, scheduler
 
         # Bisogna far esegure il coarse e poi questo prendendo un sottoinsieme migliore!
-        LR = 10 ** random.uniform(-3, -6)
-        WEIGHT_DECAY = 10 ** random.uniform(-5, -1)
-        STEP_SIZE = round(random.uniform(5, 30))
+        LR = 10 ** random.uniform(-3, -4)
+        WEIGHT_DECAY = 10 ** random.uniform(-3, -5)
+        STEP_SIZE = round(random.uniform(5, NUM_EPOCHS))
         print(f"[{i+1}/{NUM_ITER}]: \tLR: {LR} \tWEIGHT_DECAY: {WEIGHT_DECAY} \tSTEP_SIZE: {STEP_SIZE}")
         print(f"****************************** START TRAINING ******************************")
 
