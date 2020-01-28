@@ -1,6 +1,7 @@
 import copy
 import random
 
+import numpy as np
 import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
@@ -11,7 +12,7 @@ from torch.optim.adamax import Adamax
 from torch.backends import cudnn
 from tqdm import tqdm
 
-from network.xception import Xception
+from network.xception import xception
 
 DEVICE = 'cuda'
 
@@ -21,14 +22,14 @@ LR = 1e-2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 5e-5
 
-NUM_EPOCHS = 5
+NUM_EPOCHS = 30
 STEP_SIZE = 10
 GAMMA = 0.1
 
 LOG_FREQUENCY = 100
 
 NUM_ITER = 50
-OPTM_HYPER = True
+OPTM_HYPER = False
 alpha = 1
 
 
@@ -62,17 +63,19 @@ def loadHypeparameter(PATH):
 
 # Per salvare il modello una volta finito il training
 
-def saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, PATH):
+def saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, f1s, PATH):
     torch.save({
               'best_epoch': best_epoch,
               'model_state_dict': best_model_wts,
               'loss_values': loss_values,
               'accuracies': accuracies,
-              'accuraciesTrain': accuraciesTrain
+              'accuraciesTrain': accuraciesTrain,
+              'f1s': f1s
               }, PATH)
 
 def loadModel(PATH):
-    net = Xception()
+    net = xception()
+    net.last_linear = nn.Linear(2048, 2)
     checkpoint = torch.load(PATH)
     net.load_state_dict(checkpoint['model_state_dict'])
     best_model_wts = checkpoint['model_state_dict']
@@ -80,7 +83,8 @@ def loadModel(PATH):
     loss_values = checkpoint['loss_values']
     accuracies = checkpoint['accuracies']
     accuraciesTrain = checkpoint['accuraciesTrain']
-    return net, best_epoch, loss_values, accuracies, accuraciesTrain, best_model_wts
+    f1s = checkpoint['f1s']
+    return net, best_epoch, loss_values, accuracies, accuraciesTrain, f1s, best_model_wts
 
 def loadModelDeepForensics():
     model = torch.load('/aiml/references/faceforensics++_models_subset/full/xception/full_c23.p')
@@ -91,7 +95,7 @@ def loadModelDeepForensics():
 
 def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-    plt.title('The accuracy', fontsize=20)
+    plt.title('Accuracy and F1', fontsize=20)
     ax.plot(accuracies, 'r', label='Validation set')
     ax.plot(accuraciesTrain, 'b', label='Training set')
     ax.set_xlabel(r'Epoch', fontsize=10)
@@ -102,20 +106,24 @@ def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
     plt.title('F_1', fontsize=20)
-    ax.plot(F_1s, 'b', label='Loss values')
+    ax.plot(F_1s, 'b', label='F1 values')
     ax.set_xlabel(r'Epoch', fontsize=10)
-    ax.set_ylabel(r'Loss', fontsize=10)
-    ax.legend()
+    ax.set_ylabel(r'F1', fontsize=10)
     ax.tick_params(labelsize=20)
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
-    plt.title('The loss function', fontsize=20)
-    ax.plot(loss_values, 'b', label='Loss values')
+    plt.title('Loss', fontsize=20)
+    ax.plot(np.arange(1, len(loss_values) + 1, 1.0), loss_values)
     ax.set_xlabel(r'Epoch', fontsize=10)
+    steps_per_epoch = len(loss_values) / NUM_EPOCHS
+    xticks_step = 5  # in epochs
     ax.set_ylabel(r'Loss', fontsize=10)
-    ax.legend()
     ax.tick_params(labelsize=20)
+    plt.xticks(
+        np.arange(-steps_per_epoch, len(loss_values) + 1,
+                  ((len(loss_values) + steps_per_epoch) / NUM_EPOCHS) * xticks_step),
+        np.arange(0, NUM_EPOCHS + 1, xticks_step))
     plt.show()
 
 # Preparazione per il train
@@ -175,6 +183,8 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
             outputs = net(images)
 
             loss = criterion(outputs, labels)
+            if OPTM_HYPER == False:
+                loss_values.append(loss.item())
 
             if current_step % LOG_FREQUENCY == 0:
                 print('Step {}, Loss {}'.format(current_step, loss.item()))
@@ -195,7 +205,6 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
             print(f"\tThe accuracy on validation set: {accuracy}")
             accuracies.append(accuracy)
             accuraciesTrain.append(accuracyTrain)
-            loss_values.append(loss.item())
             F_1s.append(F_1)
 
         avg = (accuracy + F_1)/2
@@ -204,7 +213,7 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
             bestF_1 = F_1
             bestAvg = avg
             if OPTM_HYPER == False:
-                best_model_wts = copy.deepcopy(net.state_dict())
+                best_model_wts = copy.deepcopy(net.model.state_dict())
                 best_epoch = epoch
 
     if OPTM_HYPER == False:
@@ -246,7 +255,7 @@ def test(net, test_dataloader):
     recall = true_positives/(true_positives + false_negatives)
     F_1 = 2*precision*recall/(precision+recall)
     print('Test Accuracy: {}'.format(accuracy))
-    print(f'Precision: {F_1}')
+    print(f'F1: {F_1}')
     return accuracy, F_1
 
 # Random search

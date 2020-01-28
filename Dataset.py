@@ -23,14 +23,13 @@ def pil_loader(path):
         return img.convert('RGB')
 
 
-def train_valid_split(dataset, num_targets):
+def train_valid_split(dataset, num_targets, train_size):
     '''
     The train_valid_split function splits a training set in training and validation sets and returns them.
-    It aims for half samples of each class in training set and the other half in validation set.
     Args:
         dataset (VisionDataset): dataset to be splitted
         num_targets (int): number of targets present in given dataset
-
+        train_size (float): ratio between training and original set size
     Returns:
         tuple : (train_idx, valid_idx)
     '''
@@ -45,7 +44,8 @@ def train_valid_split(dataset, num_targets):
 
     for c in classes:
         random.shuffle(c)
-        split = int(len(c)/2)   # Split point in the middle => train/valid = 50/50
+        assert 0 < train_size < 1
+        split = int(len(c)*train_size)
         [train_idx.append(idx) for idx in c[split:]]
         [valid_idx.append(idx) for idx in c[:split]]
 

@@ -6,10 +6,11 @@ from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
 from network.networkUtility import BATCH_SIZE, NUM_ITER
-from network.networkUtility import loadModelDeepForensics, saveModel
+from network.networkUtility import loadModelDeepForensics, saveModel, loadModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
 from network.networkUtility import loadHypeparameter, setHyperparameter
+from network.networkUtility import plotAccuracyAndLoss
 
 #%%
 train_transform = transforms.Compose([transforms.Resize(333),
@@ -20,7 +21,7 @@ train_transform = transforms.Compose([transforms.Resize(333),
 
 training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform, max_real=5000, max_fake=5000)
 
-train_idx, valid_idx = train_valid_split(training_set, 2)
+train_idx, valid_idx = train_valid_split(training_set, num_targets=2, train_size=0.5)
 
 valid_dataset = Subset(training_set, valid_idx)
 train_dataset = Subset(training_set, train_idx)
@@ -40,8 +41,9 @@ path_init = '/aiml/project/DFDC/Outputs/fine/Adam/opt_hyper_fine_'
 # Training e salvataggio
 transfer_model = loadModelDeepForensics()
 prepareTraining(transfer_model, type_optimizer)
-train(transfer_model, train_dataloader, valid_dataloader, type_optimizer)    # <-- mettere il validation set nell'ultimo argomento
-saveModel(None, transfer_model.model.state_dict(), None, None, None, '/aiml/project/DFDC/Outputs/models/model_5000-5000-5-coarse_adam_best.pth')
+best_epoch, best_model_wts, bestAccuracy, bestF_1, accuracies, accuraciesTrain, F_1s, loss_values = \
+    train(transfer_model, train_dataloader, valid_dataloader, type_optimizer)
+saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, F_1s, '/aiml/project/DFDC/Outputs/models/model_5000-5000-30-fine_adam_best.pth')
 # model name format: model_<max_real>-<max_fake>-<NUM_EPOCHS>-<hyp_id>.pth
 
 #%%
@@ -49,38 +51,49 @@ saveModel(None, transfer_model.model.state_dict(), None, None, None, '/aiml/proj
 tic = time.perf_counter()
 randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer, path_init)
 toc = time.perf_counter()
+elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
+print(f"Search time: {elapsed_time}")
 
 #%%
 # Hyperparameters fine optimization
 tic = time.perf_counter()
 randomSearchFine(train_dataloader, valid_dataloader, type_optimizer, path_init)
 toc = time.perf_counter()
+elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
+print(f"Search time: {elapsed_time}")
 
 #%%
 # Visualizzazione dei risultati del hyperparameters optimization
 avg_accuracy_list = []
 F1_list = []
+avg_acc_f1_list = []
 LR_list = []
 WEIGHT_DECAY_list = []
 STEP_SIZE_list = []
-elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
 
-print(f"Search time: {elapsed_time}")
-print("avg_acc f1     lr     wd     step_size")
+print("avg_acc f1     lr     wd      step_size")
 for i in range(NUM_ITER):
   path = path_init + str(i)
   avg_acc, f1, lr, weight_decay, step_size = loadHypeparameter(path)
   avg_accuracy_list.append(avg_acc); F1_list.append(f1); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
-  print(f"{avg_acc:5.4f}  {f1:5.4f} {lr:5.4f} {weight_decay:5.4f} {step_size}")
+  avg_acc_f1_list.append((avg_acc + f1)/2)
+  print(f"{avg_acc:5.4f}  {f1:5.4f} {lr:5.4f} {weight_decay:5.5f} {step_size}")
 
 #%%
 # select the best hyperparameters
-i_max = avg_accuracy_list.index(max(avg_accuracy_list))
+i_max = avg_acc_f1_list.index(max(avg_acc_f1_list))
+ACC = avg_accuracy_list[i_max]
 F1 = F1_list[i_max]
 LR = LR_list[i_max]
 WEIGHT_DECAY = WEIGHT_DECAY_list[i_max]
 STEP_SIZE = STEP_SIZE_list[i_max]
 print("\nBest result:")
-print("avg_acc f1     lr     wd     step_size")
-print(f"{avg_accuracy_list[i_max]:5.4f}  {F1:5.4f} {LR:5.4f} {WEIGHT_DECAY:5.4f} {STEP_SIZE}")
+print("avg_acc f1     lr     wd      step_size")
+print(f"{ACC:5.4f}  {F1:5.4f} {LR:5.4f} {WEIGHT_DECAY:5.5f} {STEP_SIZE}")
 setHyperparameter(LR, WEIGHT_DECAY, STEP_SIZE)
+
+#%%
+# carica i parametri e stampa i grafici
+net, best_epoch, loss_values, accuracies, accuraciesTrain, f1s, best_model_wts = \
+    loadModel('/aiml/project/DFDC/Outputs/models/model_5000-5000-30-fine_adam_best.pth')
+plotAccuracyAndLoss(accuracies, accuraciesTrain, f1s, loss_values)

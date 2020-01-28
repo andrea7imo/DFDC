@@ -201,7 +201,7 @@ class Xception(nn.Module):
         return x
 
 
-def xception(num_classes=1000, pretrained='imagenet'):
+def xception(num_classes=1000, pretrained=False):
     model = Xception(num_classes=num_classes)
     if pretrained:
         settings = pretrained_settings['xception'][pretrained]
