@@ -121,8 +121,8 @@ def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
     ax.set_ylabel(r'Loss', fontsize=10)
     ax.tick_params(labelsize=20)
     plt.xticks(
-        np.arange(-steps_per_epoch, len(loss_values) + 1,
-                  ((len(loss_values) + steps_per_epoch) / NUM_EPOCHS) * xticks_step),
+        np.arange(0, len(loss_values) + 1,
+                  ((len(loss_values) + steps_per_epoch) / (NUM_EPOCHS+1)) * xticks_step),
         np.arange(0, NUM_EPOCHS + 1, xticks_step))
     plt.show()
 

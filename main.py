@@ -5,7 +5,7 @@ from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
 from torchvision import transforms
 from torch.utils.data import Subset, DataLoader
-from network.networkUtility import BATCH_SIZE, NUM_ITER
+from network.networkUtility import BATCH_SIZE, NUM_ITER, NUM_EPOCHS
 from network.networkUtility import loadModelDeepForensics, saveModel, loadModel
 from network.networkUtility import randomSearchCoarse
 from network.networkUtility import randomSearchFine
@@ -43,8 +43,9 @@ transfer_model = loadModelDeepForensics()
 prepareTraining(transfer_model, type_optimizer)
 best_epoch, best_model_wts, bestAccuracy, bestF_1, accuracies, accuraciesTrain, F_1s, loss_values = \
     train(transfer_model, train_dataloader, valid_dataloader, type_optimizer)
-saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, F_1s, '/aiml/project/DFDC/Outputs/models/model_5000-5000-30-fine_adam_best.pth')
-# model name format: model_<max_real>-<max_fake>-<NUM_EPOCHS>-<hyp_id>.pth
+saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, F_1s,
+          f'/aiml/project/DFDC/Outputs/models/model_5000-5000-{NUM_EPOCHS}-fine_adam_best.pth')
+                        # model name format: model_<max_real>-<max_fake>-<NUM_EPOCHS>-<hyp_id>.pth
 
 #%%
 # Hyperparameters coarse optimization
@@ -97,3 +98,6 @@ setHyperparameter(LR, WEIGHT_DECAY, STEP_SIZE)
 net, best_epoch, loss_values, accuracies, accuraciesTrain, f1s, best_model_wts = \
     loadModel('/aiml/project/DFDC/Outputs/models/model_5000-5000-30-fine_adam_best.pth')
 plotAccuracyAndLoss(accuracies, accuraciesTrain, f1s, loss_values)
+print(f"Best epoch: {best_epoch}")
+print(f"Best epoch acc: {accuracies[best_epoch]}")
+print(f"Best epoch f1: {f1s[best_epoch]}")
