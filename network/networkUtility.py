@@ -231,30 +231,36 @@ def test(net, test_dataloader):
     net.train(False)
 
     running_corrects = 0
-    i = 0
-    for images, labels in tqdm(test_dataloader):
-        images = images.to(DEVICE)
-        labels = labels.to(DEVICE)
+    all_preds = []
+    all_truths = []
 
-        outputs = net(images)
+    for i in tqdm(range(len(test_dataloader.dataset))):
+        images, label = test_dataloader.dataset.getvideo(i)
+        frame_preds = []
 
-        _, preds = torch.max(outputs.data, 1)
+        for lb in np.arange(0, len(images), BATCH_SIZE):
+            images = torch.stack(images[lb:lb + BATCH_SIZE]).to(DEVICE)
 
-        if i == 0:
-            i += 1
-            prediction = preds
-            truth = labels.data
-        else:
-            prediction = torch.cat((prediction, preds), dim=0)
-            truth = torch.cat((truth, labels.data), dim=0)
-        running_corrects += torch.sum(preds == labels.data).data.item()
+            outputs = net(images)
+
+            _, preds = torch.max(outputs.data, 1)
+
+            preds = [int(p.cpu().numpy()) for p in preds]
+            frame_preds.extend(preds)
+
+        video_pred = round(sum(frame_preds) / len(frame_preds))
+
+        running_corrects += (video_pred == label)
+        all_preds.append(video_pred)
+        all_truths.append(label)
 
     accuracy = running_corrects / float(len(test_dataloader.dataset))
-    true_positives, false_positives, true_negatives, false_negatives = confusion(prediction, truth)
-    precision = true_positives/(true_positives + alpha*false_positives)
-    recall = true_positives/(true_positives + false_negatives)
+    true_positives, false_positives, true_negatives, false_negatives = confusion(torch.tensor(all_preds),
+                                                                                 torch.tensor(all_truths))
+    precision = true_positives / (true_positives + alpha * false_positives)
+    recall = true_positives / (true_positives + false_negatives)
     if precision and recall:
-        F_1 = 2*precision*recall/(precision+recall)
+        F_1 = 2 * precision * recall / (precision + recall)
     else:
         F_1 = 0
     print('Test Accuracy: {}'.format(accuracy))

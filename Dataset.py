@@ -125,6 +125,15 @@ class Dataset(VisionDataset):
     def getlabel(self, index):
         return self.labels[index]
 
+    def getvideo(self, index):
+        images = [pil_loader(path) for path in self.frames[index]]
+        label = self.labels[index]
+
+        if self.transform is not None:
+            images = [self.transform(image) for image in images]
+
+        return images, label
+
 def get_boundingbox(face, width, height, scale=1.3, minsize=None):
     """
     Expects a dlib face to generate a quadratic bounding box.
