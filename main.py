@@ -34,8 +34,8 @@ print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 #%%
 # Scelta ottimizzatore
-type_optimizer = 'Adam'  # [RMSprop/SGD/Adam/Adamax]
-path_init = '/aiml/project/DFDC/Outputs/fine/Adam/opt_hyper_fine_'
+type_optimizer = 'RMSprop'  # [RMSprop/SGD/Adam/Adamax]
+path_init = '/aiml/project/DFDC/Outputs/fine/RMSprop/opt_hyper_fine_'
 
 #%%
 # Training e salvataggio
@@ -49,17 +49,17 @@ saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, 
 
 #%%
 # Hyperparameters coarse optimization
-tic = time.perf_counter()
+tic = time.clock_gettime(time.CLOCK_MONOTONIC)
 randomSearchCoarse(train_dataloader, valid_dataloader, type_optimizer, path_init)
-toc = time.perf_counter()
+toc = time.clock_gettime(time.CLOCK_MONOTONIC)
 elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
 print(f"Search time: {elapsed_time}")
 
 #%%
 # Hyperparameters fine optimization
-tic = time.perf_counter()
+tic = time.clock_gettime(time.CLOCK_MONOTONIC)
 randomSearchFine(train_dataloader, valid_dataloader, type_optimizer, path_init)
-toc = time.perf_counter()
+toc = time.clock_gettime(time.CLOCK_MONOTONIC)
 elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
 print(f"Search time: {elapsed_time}")
 

@@ -22,7 +22,7 @@ LR = 1e-2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 5e-5
 
-NUM_EPOCHS = 30
+NUM_EPOCHS = 20
 STEP_SIZE = 10
 GAMMA = 0.1
 
@@ -253,7 +253,10 @@ def test(net, test_dataloader):
     true_positives, false_positives, true_negatives, false_negatives = confusion(prediction, truth)
     precision = true_positives/(true_positives + alpha*false_positives)
     recall = true_positives/(true_positives + false_negatives)
-    F_1 = 2*precision*recall/(precision+recall)
+    if precision and recall:
+        F_1 = 2*precision*recall/(precision+recall)
+    else:
+        F_1 = 0
     print('Test Accuracy: {}'.format(accuracy))
     print(f'F1: {F_1}')
     return accuracy, F_1
