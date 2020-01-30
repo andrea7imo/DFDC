@@ -46,8 +46,8 @@ def train_valid_split(dataset, num_targets, train_size):
         random.shuffle(c)
         assert 0 < train_size < 1
         split = int(len(c)*train_size)
-        [train_idx.append(idx) for idx in c[split:]]
-        [valid_idx.append(idx) for idx in c[:split]]
+        [train_idx.append(idx) for idx in c[:split]]
+        [valid_idx.append(idx) for idx in c[split:]]
 
     return train_idx, valid_idx
 

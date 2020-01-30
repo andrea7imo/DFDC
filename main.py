@@ -19,9 +19,9 @@ train_transform = transforms.Compose([transforms.Resize(333),
                                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) 
 ])
 
-training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform, max_real=5000, max_fake=5000)
+training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform, max_real=4000, max_fake=16000)
 
-train_idx, valid_idx = train_valid_split(training_set, num_targets=2, train_size=0.5)
+train_idx, valid_idx = train_valid_split(training_set, num_targets=2, train_size=0.7)
 
 valid_dataset = Subset(training_set, valid_idx)
 train_dataset = Subset(training_set, train_idx)
