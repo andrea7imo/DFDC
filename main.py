@@ -1,5 +1,6 @@
 import time
 import torch
+import os
 from network.networkUtility import train
 from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
@@ -83,6 +84,9 @@ STEP_SIZE_list = []
 print("avg_acc f1     lr     wd      step_size")
 for i in range(NUM_ITER):
   path = path_init + str(i)
+  if not os.path.exists(path):
+      print("WARNING: the number of files is lower than NUM_ITER!")
+      break
   avg_acc, f1, lr, weight_decay, step_size = loadHypeparameter(path)
   avg_accuracy_list.append(avg_acc); F1_list.append(f1); LR_list.append(lr); WEIGHT_DECAY_list.append(weight_decay); STEP_SIZE_list.append(step_size)
   avg_acc_f1_list.append((avg_acc + f1)/2)
