@@ -18,7 +18,7 @@ train_transform = transforms.Compose([transforms.Resize(333),
                                       transforms.CenterCrop(299),
                                       transforms.ToTensor(),
                                       transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                                      transforms.Lambda(lambda x: x + (0.1**0.5)*torch.randn(3, 299, 299))
+                                      #transforms.Lambda(lambda x: x + (0.1**0.5)*torch.randn(3, 299, 299))
 ])
 
 training_set = Dataset('/aiml/project/DFDC/FramesDataset_full/train', transform=train_transform, max_real=4000, max_fake=16000)
@@ -29,15 +29,15 @@ valid_dataset = Subset(training_set, valid_idx)
 train_dataset = Subset(training_set, train_idx)
 
 train_dataloader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
-valid_dataloader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=8, drop_last=True)
+valid_dataloader = DataLoader(valid_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=8, drop_last=True)
 
 print('Train Dataset: {}'.format(len(train_dataset)))
 print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 #%%
 # Scelta ottimizzatore
-type_optimizer = 'RMSprop'  # [RMSprop/SGD/Adam/Adamax]
-path_init = '/aiml/project/DFDC/Outputs/fine/RMSprop/opt_hyper_fine_'
+type_optimizer = 'Adam'  # [RMSprop/SGD/Adam/Adamax]
+path_init = f'/aiml/project/DFDC/Outputs/fine/{type_optimizer}/opt_hyper_fine_'
 
 #%%
 # Training e salvataggio
@@ -50,7 +50,7 @@ best_epoch, best_model_wts, bestAccuracy, bestF_1, accuracies, accuraciesTrain, 
 toc = time.clock_gettime(time.CLOCK_MONOTONIC)
 
 saveModel(best_epoch, best_model_wts, loss_values, accuracies, accuraciesTrain, F_1s,
-          f'/aiml/project/DFDC/Outputs/models/model_4000-16000-{NUM_EPOCHS}-fine_rmsprop_best-trans.pth')
+          f'/aiml/project/DFDC/Outputs/models/model_4000-16000-{NUM_EPOCHS}-fine_adam_best.pth')
                         # model name format: model_<max_real>-<max_fake>-<NUM_EPOCHS>-<hyp_id>[-<trans>].pth
 
 elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc-tic))
