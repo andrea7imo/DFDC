@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 import os
 
-PATH_TO_UPLOAD = "/aiml/project/DFDC/FramesDataset_full"
+PATH_TO_UPLOAD = "/aiml/references/faceforensics++_models_subset"
 
 
 def upload_file(file_name, bucket, object_name=None):
@@ -29,8 +29,8 @@ def upload_file(file_name, bucket, object_name=None):
         return False
     return True
 
+
 for dir_path, dir_names, file_names in os.walk(PATH_TO_UPLOAD):
     for file_name in file_names:
         print(f"Uploading {os.path.join(dir_path, file_name)}")
         upload_file(os.path.join(dir_path, file_name), 'dfdc-rat-bucket', os.path.join(dir_path, file_name)[1:])
-
