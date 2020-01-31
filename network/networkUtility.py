@@ -97,10 +97,10 @@ def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))
     plt.title('Accuracy and F1', fontsize=20)
     ax.plot(accuracies, 'r', label='Validation set')
-    ax.plot(accuraciesTrain, 'b', label='Training set')
+    #ax.plot(accuraciesTrain, 'b', label='Training set')
     ax.set_xlabel(r'Epoch', fontsize=10)
     ax.set_ylabel(r'Accuracy', fontsize=10)
-    ax.legend()
+    #ax.legend()
     ax.tick_params(labelsize=20)
     plt.show()
 
@@ -201,10 +201,10 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
         accuracy, F_1 = test(net, val_dataloader)
         if OPTM_HYPER == False:
             # test on the training set
-            accuracyTrain = test(net, tr_dataloader)
-            print(f"\tThe accuracy on validation set: {accuracy}")
+            #accuracyTrain = test(net, tr_dataloader)
+            #print(f"\tThe accuracy on validation set: {accuracy}")
             accuracies.append(accuracy)
-            accuraciesTrain.append(accuracyTrain)
+            #accuraciesTrain.append(accuracyTrain)
             F_1s.append(F_1)
 
         avg = (accuracy + F_1)/2
@@ -235,11 +235,11 @@ def test(net, test_dataloader):
     all_truths = []
 
     for i in tqdm(range(len(test_dataloader.dataset))):
-        images, label = test_dataloader.dataset.getvideo(i)
+        frames, label = test_dataloader.dataset.dataset.getvideo(i)
         frame_preds = []
 
-        for lb in np.arange(0, len(images), BATCH_SIZE):
-            images = torch.stack(images[lb:lb + BATCH_SIZE]).to(DEVICE)
+        for lb in np.arange(0, len(frames), BATCH_SIZE):
+            images = torch.stack(frames[lb:lb + BATCH_SIZE]).to(DEVICE)
 
             outputs = net(images)
 
