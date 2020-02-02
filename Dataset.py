@@ -105,6 +105,9 @@ class Dataset(VisionDataset):
                             fake_cnt += 1
 
                 self.frames[index].append(pathFrames + "/" + dir + "/" + file)  # memorizzazione del path
+        print(f"Real videos: {real_cnt}")
+        print(f"Fake videos: {fake_cnt}")
+
 
     def __getitem__(self, index):
         image = None

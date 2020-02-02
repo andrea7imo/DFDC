@@ -102,6 +102,7 @@ def plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s,loss_values):
     ax.set_ylabel(r'Accuracy', fontsize=10)
     ax.legend()
     ax.tick_params(labelsize=20)
+    plt.ylim(0,1)
     plt.show()
 
     fig, ax = plt.subplots(1, 1, figsize=(10, 6))

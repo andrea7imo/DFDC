@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 
 import os
 
-PATH_TO_UPLOAD = "/aiml/references/faceforensics++_models_subset"
+PATH_TO_UPLOAD = "/aiml/project/DFDC/Datasets/dfdc_train"
 
 
 def upload_file(file_name, bucket, object_name=None):
