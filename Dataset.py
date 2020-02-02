@@ -53,7 +53,7 @@ def train_valid_split(dataset, num_targets, train_size):
 
 
 class Dataset(VisionDataset):
-    def __init__(self, pathFrames, type="train", transform=None, target_transform=None, max_real=None, max_fake=None):
+    def __init__(self, pathFrames, type="train", transform=None, target_transform=None, max_real=None, max_fake=None, over=False):
         super(Dataset, self).__init__(pathFrames, transform=transform, target_transform=target_transform)
         self.type = type
         self.dic = {}       # contiene: [nome del video] = indice nella dizionario frames
@@ -105,6 +105,14 @@ class Dataset(VisionDataset):
                             fake_cnt += 1
 
                 self.frames[index].append(pathFrames + "/" + dir + "/" + file)  # memorizzazione del path
+
+        if over:  # over-sampling
+            while real_cnt < fake_cnt:
+                self.frames[index_video] = random.choice(self.frames)
+                index_video += 1
+                self.labels.append(1)
+                real_cnt += 1
+
         print(f"Real videos: {real_cnt}")
         print(f"Fake videos: {fake_cnt}")
 
