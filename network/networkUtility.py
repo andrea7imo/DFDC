@@ -1,5 +1,6 @@
 import copy
 import random
+import time
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -16,13 +17,13 @@ from network.xception import xception
 
 DEVICE = 'cuda'
 
-BATCH_SIZE = 8
+BATCH_SIZE = 4
 
 LR = 1e-2
 MOMENTUM = 0.9
 WEIGHT_DECAY = 5e-5
 
-NUM_EPOCHS = 5
+NUM_EPOCHS = 20
 STEP_SIZE = 10
 GAMMA = 0.1
 
@@ -172,6 +173,7 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
     bestAvg = 0
 
     for epoch in range(NUM_EPOCHS):
+        tic = time.clock_gettime(time.CLOCK_MONOTONIC)
         print('Starting epoch {}/{}, LR = {}'.format(epoch + 1, NUM_EPOCHS, scheduler.get_lr()))
 
         for images, labels in tr_dataloader:
@@ -216,6 +218,10 @@ def train(net, tr_dataloader, val_dataloader,type_optimizer):
             if OPTM_HYPER == False:
                 best_model_wts = copy.deepcopy(net.model.state_dict())
                 best_epoch = epoch
+
+        toc = time.clock_gettime(time.CLOCK_MONOTONIC)
+        elapsed_time = time.strftime('%H:%M:%S', time.gmtime(toc - tic))
+        print(f"Time/Epoch: {elapsed_time}")
 
     if OPTM_HYPER == False:
         plotAccuracyAndLoss(accuracies, accuraciesTrain, F_1s, loss_values)

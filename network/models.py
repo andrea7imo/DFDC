@@ -12,6 +12,7 @@ import torch.nn.functional as F
 from network.xception import xception
 import math
 import torchvision
+import torch.utils.model_zoo as model_zoo
 
 
 def return_pytorch04_xception(pretrained=True):
@@ -21,8 +22,7 @@ def return_pytorch04_xception(pretrained=True):
         # Load model in torch 0.4+
         model.fc = model.last_linear
         del model.last_linear
-        state_dict = torch.load(
-            '/home/ondyari/.torch/models/xception-b5690688.pth')
+        state_dict = model_zoo.load_url('http://data.lip6.fr/cadene/pretrainedmodels/xception-b5690688.pth')
         for name, weights in state_dict.items():
             if 'pointwise' in name:
                 state_dict[name] = weights.unsqueeze(-1).unsqueeze(-1)
