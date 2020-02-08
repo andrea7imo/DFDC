@@ -1,5 +1,6 @@
 import time
 import os
+import numpy as np
 from network.networkUtility import train
 from Dataset import Dataset, train_valid_split
 from network.networkUtility import prepareTraining
@@ -36,8 +37,8 @@ print('Validation Dataset: {}'.format(len(valid_dataset)))
 
 #%%
 # Scelta ottimizzatore
-type_optimizer = 'Adam'  # [RMSprop/SGD/Adam/Adamax]
-path_init = f'/aiml/project/DFDC/Outputs/fine/{type_optimizer}/opt_hyper_fine_'
+type_optimizer = 'SGD'  # [RMSprop/SGD/Adam/Adamax]
+path_init = f'/aiml/project/DFDC/Outputs/coarse/{type_optimizer}/opt_hyper_coarse_'
 
 #%%
 # Training e salvataggio
@@ -101,6 +102,13 @@ STEP_SIZE = STEP_SIZE_list[i_max]
 print("\nBest result:")
 print("avg_acc f1     lr     wd      step_size")
 print(f"{ACC:5.4f}  {F1:5.4f} {LR:5.4f} {WEIGHT_DECAY:5.5f} {STEP_SIZE}")
+print("\nMean:")
+print("avg_acc f1")
+print(f"{np.average(avg_accuracy_list):5.4f}  {np.average(F1_list):5.4f}")
+print("\nVariance:")
+print("avg_acc f1")
+print(f"{np.var(avg_accuracy_list):7.6f}  {np.var(F1_list):7.6f}")
+
 if BATCH_SIZE != 8:
     LR = LR*(BATCH_SIZE/8)
     print(f"Adapted lr: {LR}")
